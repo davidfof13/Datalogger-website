@@ -1,69 +1,93 @@
-import webapp2
+import os
 import cgi
-from datafile import remoteSettings
+import random
+from google.appengine.ext import db
+from dataFile import remoteSettings, electricalValues
+
+import jinja2
+import webapp2
+
  
-MAIN_PAGE_HTML = """\
-<html>
-  <body style=background-color:#6495ed;>
-    <h1> Datalogger 2013 </h1>
+JINJA_ENVIRONMENT = jinja2.Environment(
+    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
+    extensions=['jinja2.ext.autoescape'],
+    autoescape=True)
  
-  <form name="input" action="/Parameters" method="post">
-    <fieldset>
-      <legend>Remote Variables:</legend>
-      Sample Time: <input type="text" name="SampleTime" size="30"><br>
-      Watchdog Time: <input type="text" name="WatchdogTime" size="30"><br>
-      Number of lines: <input type="text" name="nolines" size="30"><br>
-      Start of day (hours): <input type="text"  name="startDay" size="30"><br>
-      End of day: <input type="text" name="endDay" size="10">
-    </fieldset>
-    <input type="submit" value="Submit">
-  </form>
- 
-  <body>
-</html>
-"""
- 
-MAIN_PAGE_CSS = """\
- 
-<!DOCTYPE html>
-<html>
- <head>
-  <style>
-  div
-  {
-   background-color:#ffffff;
-  }
- 
-  p
-  {
-   background-color:#e0ffff;
-  }
-  </style>
- </head>
- 
- <body>
- 
-   <div>
-    <p > This is a paragraph</p>
-   </div>
-   
- 
- </body>
-</html>
-"""
- 
+
  
 class MainPage(webapp2.RequestHandler):
  
   def get(self):
-    self.response.write(MAIN_PAGE_CSS)
+    self.response.write("<html>")
+    #template = JINJA_ENVIRONMENT.get_template('index.html')
+    #self.response.write(template.render())
+    
+    for j in range(0, 10):
+      electricalValues(v = random.randint(1, 10), i = random.randint(1, 10)).put()
+    
+    self.response.write("Most recent values: <br>")
+    query = db.Query(electricalValues)
+    query.order('-tdate')
+    for temp in query.run(limit=5):
+      self.response.write("voltage: " + str(temp.v) + ",current: " + str(temp.i) + "<br>")
+    
+    self.response.write("""
+    <head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+          ['Voltage', 'Current'],
+          ['1',  100],
+          ['2',  15],
+          ['3',  20],
+          ['4',  30]
+        ]);
+
+
+
+        var firstChart = new google.visualization.LineChart(document.getElementById('chart_div'));
+        var secondChart = new google.visualization.LineChart(document.getElementById('second_chart'));
+     
+        
+        firstChart.draw(data, {title: 'IV characteristic',
+                          width: 500, height: 500,
+                          hAxis: {title: "Voltage(V)"},
+                          vAxis: {title: "Current(mA)"},
+                          legend: {alignment: "center"},
+                          lineWidth: 10
+        });
+        
+       secondChart.draw(data, {title: 'VI characteristic',
+                          width: 500, height: 500,
+                          hAxis: {title: "Current(mA)"},
+                          vAxis: {title: "Voltage(V)"},
+                          legend: {alignment: "end"},
+                          pointSize: 5, 
+                          colors: ['red','#004411']
+        });
+      }
+                          
+     //google.setOnLoadCallback(drawChart);
+    </script>
+  </head>
+  <body>
+    <div id="chart_div"  style="width: 500px; height: 500px; float: right;"></div>
+    <div id="second_chart" style="width: 500px; height: 500px; float: left;"></div>
+  </body>
+</html> """)
+                        
+    
  
  
  
 class sensorParameters(webapp2.RequestHandler):
  
   def get(self):
-    self.response.write(MAIN_PAGE_HTML)
+    template = JINJA_ENVIRONMENT.get_template('parametersPage.html')
+    self.response.write(template.render())
  
   def post(self):
     self.response.write('<html><body>You wrote:<pre>')
@@ -84,9 +108,4 @@ application = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/Parameters', sensorParameters),
 ], debug=True)
- 
-def main():
-    run_wsgi_app(application)
-  
-if __name__ == '__main__':
-  main()
+
