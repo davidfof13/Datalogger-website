@@ -1,0 +1,76 @@
+h1 {
+	color:blue;
+	text-align: center;
+	
+}
+
+p {
+	font-size: 130%;
+}
+
+#intro {
+	background-color: yellow;
+}
+
+.first {
+	font-size: 200%;
+	text-align: left;
+	color: red;
+}
+
+body {
+	font-family: Arial, sans-serif;
+	background: #738294
+}
+
+#container {
+	width: 900px;
+	margin: 0 auto;
+	background-color: #FFF
+}
+
+#nav {
+	margin: 0;
+	padding: 0;
+	background-color: #373333
+}
+
+#nav li a:link, #nav li a:visited {
+	text-decoration: none;
+	padding: 10px;
+	display: block;
+	border-right: 1px solid #FFFFFF;
+	color: #FFFFFF;
+}
+
+/* move from one element to another in the menu */
+#nav li a:hover {
+	background-color: #2696F1;
+	color: #FFFFFF;
+}
+#nav li {
+
+	list-style:none;
+	float: left;
+	padding: 0;
+}
+
+#body {}
+
+#body p {
+	line-height: 1.6em;
+}
+
+.clearfix:after {
+	content: ".";
+	display: block;
+	height: 0;
+	clear: both;
+	visibility: hidden;
+
+}
+
+.clearfix {display: inline-block;}
+
+*html .clearfix{height: %1;}
+.clearfix {display: block;}
